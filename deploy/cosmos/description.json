@@ -1,0 +1,9 @@
+{
+  "name": "Nocturne",
+  "description": "Nightscout-compatible diabetes management API with Row Level Security and multi-tenancy.",
+  "longDescription": "<p>Nocturne is a modern .NET rewrite of the Nightscout diabetes management API with full v1/v2/v3 API compatibility. It adds multi-tenancy with PostgreSQL Row Level Security, a SvelteKit web UI, and optional chat bot integrations (Discord, Slack, Telegram, WhatsApp).</p><p><strong>After deployment, you must set two environment variables on both the <code>-api</code> and <code>-web</code> containers before the app will work correctly:</strong></p><ul><li><code>BASE_DOMAIN</code> — your hostname, e.g. <code>nocturne.example.com</code></li><li><code>ORIGIN</code> (<code>-web</code> only) — full origin URL, e.g. <code>https://nocturne.example.com</code></li></ul><p>Configure data connectors (Dexcom, LibreLinkUp, etc.) and chat bot credentials through Settings → Administration in the Nocturne UI after first login. Credentials are encrypted at rest with the instance key.</p>",
+  "tags": ["health", "diabetes", "nightscout", "cgm", "healthcare"],
+  "repository": "https://github.com/nightscout/nocturne",
+  "image": "https://ghcr.io/nightscout/nocturne/nocturne-api",
+  "supported_architectures": ["amd64", "arm64"]
+}
