@@ -153,6 +153,49 @@ The bootstrap user (`POSTGRES_USER`) is only used for initial container setup. A
 
 For bring-your-own PostgreSQL (not using the bundled container), run `docs/postgres/bootstrap-roles.sql` once as a superuser. See the comments in that file for details.
 
+## Production Deployment (Cosmos)
+
+[Cosmos](https://cosmos-cloud.io/) is a self-hosted application server and reverse proxy. It handles TLS, authentication, and auto-updates, so the Nocturne stack does not need an external reverse proxy of its own.
+
+### Prerequisites
+
+- A running Cosmos instance (v0.9.0 or later)
+- Docker available on the host
+
+### Deploying from the marketplace
+
+If Nocturne is listed in a Cosmos marketplace you have configured, open **Apps → Market**, search for **Nocturne**, and click **Install**. Cosmos will prompt for a service name and generate all passwords automatically — skip to [Post-deployment configuration](#post-deployment-configuration) below.
+
+### Deploying from the compose file
+
+1. In the Cosmos UI, go to **Apps → Create App → Docker Compose**.
+2. Paste the contents of [`deploy/cosmos/cosmos-compose.json`](deploy/cosmos/cosmos-compose.json) into the editor.
+3. Choose a service name (e.g. `nocturne`). Cosmos replaces `{ServiceName}` throughout the template.
+4. Click **Install**. Cosmos generates random passwords for all `{Passwords.N}` placeholders and starts the stack.
+
+The following containers are created:
+
+| Container | Role |
+|---|---|
+| `<name>` | YARP gateway — Cosmos routes external traffic here |
+| `<name>-api` | Nocturne .NET API |
+| `<name>-web` | SvelteKit frontend |
+| `<name>-postgres` | PostgreSQL 17 |
+| `<name>-db-setup` | One-shot container that creates the three PostgreSQL roles, then exits |
+
+### Post-deployment configuration
+
+Two environment variables are left empty by the template because Cosmos has no hostname template variable — they must be set after deployment:
+
+1. In the Cosmos UI, open each container's **Environment** settings.
+2. On the **`<name>-api`** container, set `BASE_DOMAIN` to your hostname (e.g. `nocturne.example.com`).
+3. On the **`<name>-web`** container, set both `BASE_DOMAIN` and `ORIGIN` (e.g. `https://nocturne.example.com`).
+4. Restart both containers.
+
+> `ORIGIN` is required by SvelteKit for CSRF protection. The app will reject form submissions until it is set correctly.
+
+Once running, log in and configure data connectors and chat bot integrations through **Settings → Administration**.
+
 ## Development
 
 ### Running Tests
