@@ -181,7 +181,32 @@ The following containers are created:
 | `<name>-api` | Nocturne .NET API |
 | `<name>-web` | SvelteKit frontend |
 | `<name>-postgres` | PostgreSQL 17 |
-| `<name>-db-setup` | One-shot container that creates the three PostgreSQL roles, then exits |
+
+### Bootstrap PostgreSQL roles
+
+Cosmos's compose format does not support the Docker `configs` mechanism used to seed the database on first start, so the three PostgreSQL roles must be created manually once after the first deployment. Find the generated passwords in the container environment variables via the Cosmos UI, then run:
+
+```bash
+docker exec -i <name>-postgres psql -U nocturne -d nocturne <<'SQL'
+CREATE ROLE nocturne_migrator LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD '<MIGRATOR_PASSWORD>';
+CREATE ROLE nocturne_app      LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD '<APP_PASSWORD>';
+CREATE ROLE nocturne_web      LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD '<WEB_PASSWORD>';
+ALTER DATABASE nocturne OWNER TO nocturne_migrator;
+ALTER SCHEMA public OWNER TO nocturne_migrator;
+GRANT CONNECT ON DATABASE nocturne TO nocturne_app;
+GRANT USAGE ON SCHEMA public TO nocturne_app;
+GRANT CONNECT ON DATABASE nocturne TO nocturne_web;
+GRANT USAGE, CREATE ON SCHEMA public TO nocturne_web;
+ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO nocturne_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO nocturne_app;
+SQL
+```
+
+The `<MIGRATOR_PASSWORD>`, `<APP_PASSWORD>`, and `<WEB_PASSWORD>` values correspond to `Passwords.1`, `Passwords.2`, and `Passwords.3` in the template — visible as `ConnectionStrings__*` and `NOCTURNE_POSTGRES_URI` environment variables on the running containers.
+
+After running the SQL, restart the `<name>-api` and `<name>-web` containers.
 
 ### Post-deployment configuration
 

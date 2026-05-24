@@ -6,7 +6,7 @@
       "container_name": "{ServiceName}",
       "restart": "unless-stopped",
       "entrypoint": "dotnet",
-      "command": ["/app/yarp.dll"],
+      "command": "/app/yarp.dll",
       "environment": [
         "ASPNETCORE_ENVIRONMENT=Production",
         "REVERSEPROXY__CLUSTERS__cluster_nocturne-web__HTTPREQUEST__ACTIVITYTIMEOUT=00:05:00",
@@ -100,7 +100,7 @@
         "BASE_DOMAIN="
       ],
       "depends_on": {
-        "{ServiceName}-db-setup": { "condition": "service_completed_successfully" }
+        "{ServiceName}-postgres": { "condition": "service_healthy" }
       },
       "labels": {
         "cosmos-persistent-env": "INSTANCE_KEY, ConnectionStrings__nocturne-postgres, ConnectionStrings__nocturne-postgres-migrator",
@@ -171,29 +171,6 @@
       }
     },
 
-    "{ServiceName}-db-setup": {
-      "image": "postgres:17.6",
-      "container_name": "{ServiceName}-db-setup",
-      "restart": "no",
-      "depends_on": {
-        "{ServiceName}-postgres": { "condition": "service_healthy" }
-      },
-      "environment": [
-        "POSTGRES_PASSWORD={Passwords.0}",
-        "NOCTURNE_MIGRATOR_PASSWORD={Passwords.1}",
-        "NOCTURNE_APP_PASSWORD={Passwords.2}",
-        "NOCTURNE_WEB_PASSWORD={Passwords.3}"
-      ],
-      "entrypoint": "bash",
-      "command": [
-        "-c",
-        "PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h {ServiceName}-postgres -U nocturne -d nocturne --set ON_ERROR_STOP=on --set migrator_password=\"$NOCTURNE_MIGRATOR_PASSWORD\" --set app_password=\"$NOCTURNE_APP_PASSWORD\" --set web_password=\"$NOCTURNE_WEB_PASSWORD\" -c \"CREATE ROLE nocturne_migrator LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'migrator_password'\" -c \"CREATE ROLE nocturne_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'app_password'\" -c \"CREATE ROLE nocturne_web LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'web_password'\" -c \"ALTER DATABASE nocturne OWNER TO nocturne_migrator\" -c \"ALTER SCHEMA public OWNER TO nocturne_migrator\" -c \"GRANT CONNECT ON DATABASE nocturne TO nocturne_app\" -c \"GRANT USAGE ON SCHEMA public TO nocturne_app\" -c \"GRANT CONNECT ON DATABASE nocturne TO nocturne_web\" -c \"GRANT USAGE, CREATE ON SCHEMA public TO nocturne_web\" -c \"ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO nocturne_app\" -c \"ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO nocturne_app\""
-      ],
-      "labels": {
-        "cosmos-stack": "{ServiceName}",
-        "cosmos-stack-main": "{ServiceName}"
-      }
-    }
   },
 
   "volumes": {
