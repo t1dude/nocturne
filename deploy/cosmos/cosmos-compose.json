@@ -150,7 +150,7 @@
         "POSTGRES_DB=nocturne"
       ],
       "healthcheck": {
-        "test": ["CMD-SHELL", "pg_isready -U nocturne -d nocturne"],
+        "test": "pg_isready -U nocturne -d nocturne",
         "interval": "10s",
         "timeout": "5s",
         "retries": 5,
@@ -169,8 +169,7 @@
         "cosmos-stack": "{ServiceName}",
         "cosmos-stack-main": "{ServiceName}"
       }
-    },
-
+    }
   },
 
   "volumes": {
