@@ -5,7 +5,7 @@
       "image": "mcr.microsoft.com/dotnet/nightly/yarp:2.3-preview",
       "container_name": "{ServiceName}",
       "restart": "unless-stopped",
-      "entrypoint": ["dotnet"],
+      "entrypoint": "dotnet",
       "command": ["/app/yarp.dll"],
       "environment": [
         "ASPNETCORE_ENVIRONMENT=Production",
@@ -184,8 +184,9 @@
         "NOCTURNE_APP_PASSWORD={Passwords.2}",
         "NOCTURNE_WEB_PASSWORD={Passwords.3}"
       ],
-      "entrypoint": ["bash", "-c"],
+      "entrypoint": "bash",
       "command": [
+        "-c",
         "PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h {ServiceName}-postgres -U nocturne -d nocturne --set ON_ERROR_STOP=on --set migrator_password=\"$NOCTURNE_MIGRATOR_PASSWORD\" --set app_password=\"$NOCTURNE_APP_PASSWORD\" --set web_password=\"$NOCTURNE_WEB_PASSWORD\" -c \"CREATE ROLE nocturne_migrator LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'migrator_password'\" -c \"CREATE ROLE nocturne_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'app_password'\" -c \"CREATE ROLE nocturne_web LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD :'web_password'\" -c \"ALTER DATABASE nocturne OWNER TO nocturne_migrator\" -c \"ALTER SCHEMA public OWNER TO nocturne_migrator\" -c \"GRANT CONNECT ON DATABASE nocturne TO nocturne_app\" -c \"GRANT USAGE ON SCHEMA public TO nocturne_app\" -c \"GRANT CONNECT ON DATABASE nocturne TO nocturne_web\" -c \"GRANT USAGE, CREATE ON SCHEMA public TO nocturne_web\" -c \"ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO nocturne_app\" -c \"ALTER DEFAULT PRIVILEGES FOR ROLE nocturne_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO nocturne_app\""
       ],
       "labels": {
